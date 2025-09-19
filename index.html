@@ -13,8 +13,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide-react@latest"></script>
+    <!-- PERBAIKAN: Menggunakan library Lucide utama -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 
     <!-- React -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -91,7 +91,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // --- PERBAIKAN: Jadikan instance dan fungsi Firebase menjadi global ---
+        // --- Jadikan instance dan fungsi Firebase menjadi global ---
         window.auth = auth;
         window.db = db;
         window.onAuthStateChanged = onAuthStateChanged;
@@ -114,11 +114,32 @@
         const { useState, useEffect, StrictMode } = React;
         const { createRoot } = ReactDOM;
         
-        // ========= Komponen Ikon (Menggunakan Lucide) =========
+        // ========= PERBAIKAN: Komponen Ikon (Menggunakan Lucide) =========
         const Icon = ({ name, className }) => {
-            const icon = lucide[name];
-            if (!icon) return null;
-            return React.createElement(icon, { className });
+            // Convert PascalCase to kebab-case for lucide library
+            const kebabCaseName = name.replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2').toLowerCase();
+            const iconData = window.lucide.icons[kebabCaseName];
+
+            if (!iconData) {
+                console.warn(`Icon '${name}' not found.`);
+                return null;
+            }
+
+            const [tag, attrs, children] = iconData;
+            
+            // Create the inner SVG content from the children array
+            const svgInnerHtml = children.map(([childTag, childAttrs]) => {
+                const attrsString = Object.entries(childAttrs).map(([key, value]) => `${key}="${value}"`).join(' ');
+                return `<${childTag} ${attrsString}></${childTag}>`;
+            }).join('');
+
+            return (
+                <svg
+                    {...attrs}
+                    className={className}
+                    dangerouslySetInnerHTML={{ __html: svgInnerHtml }}
+                />
+            );
         };
 
         // ========= Komponen Halaman Landing =========
@@ -458,10 +479,6 @@
                     }
                 });
                 
-                // PERBAIKAN: Hapus blok kode yang salah dari sini
-                // Blok yang mencoba membuat fungsi global dihapus karena sudah ditangani dengan benar
-                // di <script type="module">
-
                 return () => unsubscribe(); // Cleanup listener
             }, []);
 
