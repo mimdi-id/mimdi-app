@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mimdi App - Pengelola Bisnis Anda</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide-react@latest"></script>
+
+    <!-- React -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .bg-gradient-dark {
+            background-color: #000000;
+            background-image: linear-gradient(145deg, #111827 0%, #000000 74%);
+        }
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body class="bg-gradient-dark text-gray-200">
+    <div id="root"></div>
+
+    <script type="module">
+        // Impor pustaka Firebase yang dibutuhkan
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged, 
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            signOut
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore,
+            collection,
+            doc,
+            addDoc,
+            getDocs,
+            onSnapshot,
+            query,
+            deleteDoc,
+            updateDoc
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ===================================================================================
+        // PASTE KONFIGURASI FIREBASE ANDA DI SINI
+        // Ganti objek di bawah ini dengan konfigurasi dari project Firebase Anda
+        // ===================================================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSy...",
+            authDomain: "your-project-id.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project-id.appspot.com",
+            messagingSenderId: "...",
+            appId: "1:..."
+        };
+        // ===================================================================================
+
+        // Inisialisasi Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+    </script>
+
+    <script type="text/babel">
+        const { useState, useEffect, StrictMode } = React;
+        const { createRoot } = ReactDOM;
+        
+        // ========= Komponen Ikon (Menggunakan Lucide) =========
+        const Icon = ({ name, className }) => {
+            const icon = lucide[name];
+            if (!icon) return null;
+            return React.createElement(icon, { className });
+        };
+
+        // ========= Komponen Halaman Landing =========
+        function LandingPage({ setView }) {
+            return (
+                <div className="min-h-screen flex flex-col items-center justify-center text-center p-6">
+                    <div className="absolute top-0 left-0 w-full h-full bg-grid-white/[0.05] [mask-image:linear-gradient(to_bottom,white_10%,transparent_100%)]"></div>
+                    <div className="relative z-10">
+                        <div className="inline-flex items-center justify-center bg-gray-800 p-3 rounded-full mb-6 shadow-lg">
+                             <Icon name="BarChart" className="w-8 h-8 text-indigo-400" />
+                        </div>
+                        <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-4">
+                            Mimdi App
+                        </h1>
+                        <p className="max-w-2xl mx-auto text-lg md:text-xl text-gray-400 mb-8">
+                            Atur lalu lintas keuangan, orderan, prospek, dan kembangkan bisnis Anda di satu tempat yang terpusat dan efisien.
+                        </p>
+                        <button 
+                            onClick={() => setView('login')}
+                            className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-8 rounded-full text-lg transition-transform transform hover:scale-105 shadow-xl">
+                            Mulai Sekarang
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // ========= Komponen Halaman Login =========
+        function LoginPage({ setView }) {
+            const [isLogin, setIsLogin] = useState(true);
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [error, setError] = useState('');
+            const [loading, setLoading] = useState(false);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                setError('');
+                try {
+                    if (isLogin) {
+                        await window.signInWithEmailAndPassword(window.auth, email, password);
+                    } else {
+                        await window.createUserWithEmailAndPassword(window.auth, email, password);
+                    }
+                    // onAuthStateChanged akan menangani navigasi ke dashboard
+                } catch (err) {
+                    setError(err.message.replace('Firebase: ', ''));
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            return (
+                <div className="min-h-screen flex items-center justify-center p-4">
+                    <div className="w-full max-w-md">
+                        <div className="text-center mb-8">
+                            <div className="inline-flex items-center justify-center bg-gray-800 p-3 rounded-full mb-4">
+                                 <Icon name="BarChart" className="w-8 h-8 text-indigo-400" />
+                            </div>
+                            <h2 className="text-3xl font-bold text-white">Selamat Datang di Mimdi</h2>
+                            <p className="text-gray-400">{isLogin ? 'Masuk untuk melanjutkan' : 'Buat akun baru'}</p>
+                        </div>
+                        <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700 p-8 rounded-2xl shadow-2xl">
+                            <form onSubmit={handleSubmit}>
+                                <div className="mb-4">
+                                    <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="email">
+                                        Alamat Email
+                                    </label>
+                                    <input 
+                                        id="email"
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        placeholder="anda@email.com"
+                                        required
+                                    />
+                                </div>
+                                <div className="mb-6">
+                                    <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="password">
+                                        Password
+                                    </label>
+                                    <input 
+                                        id="password"
+                                        type="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        placeholder="********"
+                                        required
+                                    />
+                                </div>
+                                {error && <p className="text-red-500 text-xs italic mb-4">{error}</p>}
+                                <div className="mb-6">
+                                    <button 
+                                        type="submit"
+                                        disabled={loading}
+                                        className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-lg transition duration-300 disabled:bg-gray-500">
+                                        {loading ? 'Memproses...' : (isLogin ? 'Masuk' : 'Daftar')}
+                                    </button>
+                                </div>
+                                <p className="text-center text-sm text-gray-400">
+                                    {isLogin ? 'Belum punya akun?' : 'Sudah punya akun?'}
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setIsLogin(!isLogin)} 
+                                        className="ml-1 font-bold text-indigo-400 hover:text-indigo-300">
+                                        {isLogin ? 'Daftar di sini' : 'Masuk di sini'}
+                                    </button>
+                                </p>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        // ========= Komponen Halaman Admin / Dashboard =========
+        function DashboardPage({ user }) {
+            const [orders, setOrders] = useState([]);
+            const [isLoading, setIsLoading] = useState(true);
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [currentOrder, setCurrentOrder] = useState(null); // untuk edit
+
+            // Mengambil data pesanan secara real-time
+            useEffect(() => {
+                if (!user) return;
+                
+                const ordersCollectionRef = window.collection(window.db, 'users', user.uid, 'orders');
+                const q = window.query(ordersCollectionRef);
+
+                const unsubscribe = window.onSnapshot(q, (querySnapshot) => {
+                    const ordersData = [];
+                    querySnapshot.forEach((doc) => {
+                        ordersData.push({ ...doc.data(), id: doc.id });
+                    });
+                    setOrders(ordersData);
+                    setIsLoading(false);
+                });
+
+                // Cleanup listener saat komponen unmount
+                return () => unsubscribe();
+            }, [user]);
+
+            const handleLogout = async () => {
+                await window.signOut(window.auth);
+            };
+
+            const openAddModal = () => {
+                setCurrentOrder(null);
+                setIsModalOpen(true);
+            };
+
+            const openEditModal = (order) => {
+                setCurrentOrder(order);
+                setIsModalOpen(true);
+            };
+
+            const handleDelete = async (orderId) => {
+                if(confirm('Apakah Anda yakin ingin menghapus pesanan ini?')) {
+                    const orderDocRef = window.doc(window.db, 'users', user.uid, 'orders', orderId);
+                    await window.deleteDoc(orderDocRef);
+                }
+            };
+            
+            return (
+                <div className="min-h-screen p-4 sm:p-6 lg:p-8">
+                    <header className="flex justify-between items-center mb-8">
+                        <div className="flex items-center space-x-3">
+                            <div className="bg-gray-800 p-2 rounded-lg">
+                                <Icon name="BarChart" className="w-6 h-6 text-indigo-400" />
+                            </div>
+                            <h1 className="text-2xl font-bold text-white">Dashboard Pesanan</h1>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                            <span className="text-sm text-gray-400 hidden sm:block">{user.email}</span>
+                             <button 
+                                onClick={handleLogout}
+                                className="bg-gray-700 hover:bg-red-600 text-white font-semibold p-2 rounded-lg transition duration-300 flex items-center justify-center">
+                                <Icon name="LogOut" className="w-5 h-5"/>
+                            </button>
+                        </div>
+                    </header>
+
+                    <main>
+                        <div className="bg-gray-900/50 border border-gray-700 rounded-2xl shadow-xl p-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-xl font-semibold">Daftar Orderan</h2>
+                                <button
+                                    onClick={openAddModal}
+                                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-lg flex items-center space-x-2">
+                                    <Icon name="Plus" className="w-5 h-5"/>
+                                    <span>Tambah Order</span>
+                                </button>
+                            </div>
+
+                            {isLoading ? (
+                                <p className="text-center text-gray-400 py-8">Memuat data...</p>
+                            ) : orders.length === 0 ? (
+                                <div className="text-center py-10 border-2 border-dashed border-gray-700 rounded-lg">
+                                    <Icon name="Inbox" className="w-12 h-12 mx-auto text-gray-600 mb-2"/>
+                                    <h3 className="text-lg font-semibold">Belum ada pesanan</h3>
+                                    <p className="text-gray-500">Klik "Tambah Order" untuk memulai.</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left">
+                                        <thead>
+                                            <tr className="border-b border-gray-700">
+                                                <th className="p-3">ID Order</th>
+                                                <th className="p-3">Nama</th>
+                                                <th className="p-3">Jenis</th>
+                                                <th className="p-3 text-right">Total</th>
+                                                <th className="p-3 text-center">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {orders.map(order => (
+                                                <tr key={order.id} className="border-b border-gray-800 hover:bg-gray-800/50">
+                                                    <td className="p-3 font-mono text-xs">#{order.IDOrder || order.id.substring(0,6)}</td>
+                                                    <td className="p-3 font-semibold">{order.Nama}</td>
+                                                    <td className="p-3">{order.Jenis}</td>
+                                                    <td className="p-3 text-right">Rp {new Intl.NumberFormat('id-ID').format(order.Total || 0)}</td>
+                                                    <td className="p-3 text-center">
+                                                        <div className="flex justify-center space-x-2">
+                                                            <button onClick={() => openEditModal(order)} className="text-blue-400 hover:text-blue-300 p-1"><Icon name="FilePenLine" className="w-5 h-5"/></button>
+                                                            <button onClick={() => handleDelete(order.id)} className="text-red-500 hover:text-red-400 p-1"><Icon name="Trash2" className="w-5 h-5"/></button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    </main>
+
+                    {isModalOpen && <OrderModal user={user} order={currentOrder} closeModal={() => setIsModalOpen(false)} />}
+                </div>
+            );
+        }
+
+        // ========= Komponen Modal untuk Tambah/Edit Order =========
+        function OrderModal({ user, order, closeModal }) {
+            const [formData, setFormData] = useState({
+                IDOrder: order?.IDOrder || '',
+                Nama: order?.Nama || '',
+                Jenis: order?.Jenis || '',
+                Jumlah: order?.Jumlah || 1,
+                Satuan: order?.Satuan || 'pcs',
+                Total: order?.Total || 0,
+                Catatan: order?.Catatan || ''
+            });
+            const [isSubmitting, setIsSubmitting] = useState(false);
+
+            const handleChange = (e) => {
+                const { name, value, type } = e.target;
+                setFormData(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
+            };
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setIsSubmitting(true);
+                try {
+                    const ordersCollectionRef = window.collection(window.db, 'users', user.uid, 'orders');
+                    if (order) { // Edit mode
+                        const orderDocRef = window.doc(window.db, 'users', user.uid, 'orders', order.id);
+                        await window.updateDoc(orderDocRef, formData);
+                    } else { // Add mode
+                         await window.addDoc(ordersCollectionRef, formData);
+                    }
+                    closeModal();
+                } catch (error) {
+                    console.error("Error saving order: ", error);
+                    alert("Gagal menyimpan data!");
+                } finally {
+                    setIsSubmitting(false);
+                }
+            };
+
+            return (
+                <div className="modal-backdrop" onClick={closeModal}>
+                    <div className="bg-gray-900 border border-gray-700 w-full max-w-2xl rounded-2xl shadow-lg p-8 m-4" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold">{order ? 'Edit' : 'Tambah'} Pesanan</h2>
+                            <button onClick={closeModal} className="text-gray-500 hover:text-white"><Icon name="X" className="w-6 h-6" /></button>
+                        </div>
+                        <form onSubmit={handleSubmit}>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <InputField label="ID Order" name="IDOrder" value={formData.IDOrder} onChange={handleChange} placeholder="Contoh: INV-001"/>
+                                <InputField label="Nama Pelanggan" name="Nama" value={formData.Nama} onChange={handleChange} required/>
+                                <InputField label="Jenis Layanan/Produk" name="Jenis" value={formData.Jenis} onChange={handleChange} required/>
+                                <InputField label="Total Harga (Rp)" name="Total" type="number" value={formData.Total} onChange={handleChange} required/>
+                                <InputField label="Jumlah" name="Jumlah" type="number" value={formData.Jumlah} onChange={handleChange} />
+                                <InputField label="Satuan" name="Satuan" value={formData.Satuan} onChange={handleChange} placeholder="pcs, kg, project"/>
+                            </div>
+                            <div className="mt-4">
+                                <label className="block text-sm font-medium text-gray-400 mb-1">Catatan</label>
+                                <textarea name="Catatan" value={formData.Catatan} onChange={handleChange} rows="3" className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                            </div>
+                            <div className="mt-6 flex justify-end space-x-3">
+                                <button type="button" onClick={closeModal} className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">Batal</button>
+                                <button type="submit" disabled={isSubmitting} className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-lg disabled:bg-gray-500">
+                                    {isSubmitting ? 'Menyimpan...' : 'Simpan'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            );
+        }
+
+        const InputField = ({ label, name, ...props }) => (
+            <div>
+                <label htmlFor={name} className="block text-sm font-medium text-gray-400 mb-1">{label}</label>
+                <input id={name} name={name} {...props} className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+        );
+
+
+        // ========= Komponen Utama Aplikasi =========
+        function App() {
+            const [view, setView] = useState('loading'); // loading, landing, login, dashboard
+            const [user, setUser] = useState(null);
+
+            useEffect(() => {
+                // Listener untuk status autentikasi
+                const unsubscribe = window.onAuthStateChanged(window.auth, (currentUser) => {
+                    if (currentUser) {
+                        setUser(currentUser);
+                        setView('dashboard');
+                    } else {
+                        setUser(null);
+                        setView('landing');
+                    }
+                });
+
+                // Menjadikan fungsi firebase global agar bisa diakses di komponen lain
+                // Ini adalah workaround untuk lingkungan tanpa build tools
+                window.auth = window.auth;
+                window.db = window.db;
+                window.collection = window.collection;
+                window.doc = window.doc;
+                window.addDoc = window.addDoc;
+                window.getDocs = window.getDocs;
+                window.onSnapshot = window.onSnapshot;
+                window.query = window.query;
+                window.deleteDoc = window.deleteDoc;
+                window.updateDoc = window.updateDoc;
+                window.signOut = window.signOut;
+                window.signInWithEmailAndPassword = window.signInWithEmailAndPassword;
+                window.createUserWithEmailAndPassword = window.createUserWithEmailAndPassword;
+
+                return () => unsubscribe(); // Cleanup listener
+            }, []);
+
+            const renderView = () => {
+                switch (view) {
+                    case 'loading':
+                        return <div className="min-h-screen flex items-center justify-center"><p>Memuat aplikasi...</p></div>;
+                    case 'landing':
+                        return <LandingPage setView={setView} />;
+                    case 'login':
+                        return <LoginPage setView={setView} />;
+                    case 'dashboard':
+                        return <DashboardPage user={user} />;
+                    default:
+                        return <LandingPage setView={setView} />;
+                }
+            };
+            
+            return (
+                <div>{renderView()}</div>
+            );
+        }
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<StrictMode><App /></StrictMode>);
+
+    </script>
+</body>
+</html>
