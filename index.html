@@ -76,14 +76,29 @@
         // PASTE KONFIGURASI FIREBASE ANDA DI SINI
         // Ganti objek di bawah ini dengan konfigurasi dari project Firebase Anda
         // ===================================================================================
-        const firebaseConfig = {
-            apiKey: "AIzaSy...",
-            authDomain: "your-project-id.firebaseapp.com",
-            projectId: "your-project-id",
-            storageBucket: "your-project-id.appspot.com",
-            messagingSenderId: "...",
-            appId: "1:..."
-        };
+        <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyD8I76byf8xcZwTS6oDhtEmvB34PlugUcI",
+    authDomain: "mimdi-app.firebaseapp.com",
+    projectId: "mimdi-app",
+    storageBucket: "mimdi-app.firebasestorage.app",
+    messagingSenderId: "1089237635965",
+    appId: "1:1089237635965:web:249e9192de63ab8553b214",
+    measurementId: "G-VHDRWC8ZJ7"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
         // ===================================================================================
 
         // Inisialisasi Firebase
