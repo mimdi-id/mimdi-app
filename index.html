@@ -73,25 +73,40 @@
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ===================================================================================
-        // PASTE KONFIGURASI FIREBASE ANDA DI SINI
-        // Ganti objek di bawah ini dengan konfigurasi dari project Firebase Anda
+        // Konfigurasi Firebase Anda
         // ===================================================================================
-        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyD8I76byf8xcZwTS6oDhtEmvB34PlugUcI",
-  authDomain: "mimdi-app.firebaseapp.com",
-  projectId: "mimdi-app",
-  storageBucket: "mimdi-app.firebasestorage.app",
-  messagingSenderId: "1089237635965",
-  appId: "1:1089237635965:web:249e9192de63ab8553b214",
-  measurementId: "G-VHDRWC8ZJ7"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyD8I76byf8xcZwTS6oDhtEmvB34PlugUcI",
+            authDomain: "mimdi-app.firebaseapp.com",
+            projectId: "mimdi-app",
+            storageBucket: "mimdi-app.appspot.com",
+            messagingSenderId: "1089237635965",
+            appId: "1:1089237635965:web:249e9192de63ab8553b214",
+            measurementId: "G-VHDRWC8ZJ7"
+        };
         // ===================================================================================
 
         // Inisialisasi Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+        // --- PERBAIKAN: Jadikan instance dan fungsi Firebase menjadi global ---
+        window.auth = auth;
+        window.db = db;
+        window.onAuthStateChanged = onAuthStateChanged;
+        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+        window.signOut = signOut;
+        window.collection = collection;
+        window.doc = doc;
+        window.addDoc = addDoc;
+        window.getDocs = getDocs;
+        window.onSnapshot = onSnapshot;
+        window.query = query;
+        window.deleteDoc = deleteDoc;
+        window.updateDoc = updateDoc;
+        // -------------------------------------------------------------------
 
     </script>
 
@@ -442,22 +457,10 @@ const firebaseConfig = {
                         setView('landing');
                     }
                 });
-
-                // Menjadikan fungsi firebase global agar bisa diakses di komponen lain
-                // Ini adalah workaround untuk lingkungan tanpa build tools
-                window.auth = window.auth;
-                window.db = window.db;
-                window.collection = window.collection;
-                window.doc = window.doc;
-                window.addDoc = window.addDoc;
-                window.getDocs = window.getDocs;
-                window.onSnapshot = window.onSnapshot;
-                window.query = window.query;
-                window.deleteDoc = window.deleteDoc;
-                window.updateDoc = window.updateDoc;
-                window.signOut = window.signOut;
-                window.signInWithEmailAndPassword = window.signInWithEmailAndPassword;
-                window.createUserWithEmailAndPassword = window.createUserWithEmailAndPassword;
+                
+                // PERBAIKAN: Hapus blok kode yang salah dari sini
+                // Blok yang mencoba membuat fungsi global dihapus karena sudah ditangani dengan benar
+                // di <script type="module">
 
                 return () => unsubscribe(); // Cleanup listener
             }, []);
@@ -488,3 +491,4 @@ const firebaseConfig = {
     </script>
 </body>
 </html>
+
